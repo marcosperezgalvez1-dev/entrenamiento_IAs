@@ -1,0 +1,89 @@
+from flask import Flask, request, jsonify
+import requests
+
+app = Flask(__name__)
+
+def analizar_texto(texto):
+    """Calcula estadísticas básicas del texto"""
+    palabras   = len(texto.split())
+    frases     = texto.count('.') + texto.count('!') + texto.count('?')
+    caracteres = len(texto)
+    caracteres_sin_espacios = len(texto.replace(" ", ""))
+
+    return {
+        "palabras":               palabras,
+        "frases":                 max(frases, 1),
+        "caracteres":             caracteres,
+        "caracteres_sin_espacios": caracteres_sin_espacios,
+        "media_palabras_por_frase": round(palabras / max(frases, 1), 1)
+    }
+
+def detectar_idioma(texto):
+    """Detecta el idioma del texto por palabras clave comunes"""
+    texto_lower = texto.lower()
+
+    indicadores = {
+        "Español":  ["el", "la", "los", "las", "que", "de", "en", "un", "una", "es", "por"],
+        "Inglés":   ["the", "is", "are", "was", "were", "and", "for", "that", "this", "with"],
+        "Francés":  ["le", "la", "les", "des", "une", "est", "que", "qui", "dans", "pour"],
+        "Alemán":   ["der", "die", "das", "ist", "und", "ein", "eine", "mit", "auf", "für"],
+        "Portugués":["o", "a", "os", "as", "que", "de", "em", "um", "uma", "por", "não"],
+    }
+
+    palabras_texto = set(texto_lower.split())
+    puntuaciones   = {}
+
+    for idioma, palabras_clave in indicadores.items():
+        puntuaciones[idioma] = sum(1 for p in palabras_clave if p in palabras_texto)
+
+    idioma_detectado = max(puntuaciones, key=puntuaciones.get)
+    confianza        = round((puntuaciones[idioma_detectado] / len(indicadores[idioma_detectado])) * 100)
+
+    return {
+        "idioma":    idioma_detectado,
+        "confianza": min(confianza, 99)
+    }
+
+def resumir_con_ollama(texto):
+    """Pide a Ollama un resumen del texto"""
+    prompt = f"""Resume el siguiente texto en 2-3 frases cortas.
+Sé conciso y directo. Responde siempre en español.
+Texto: {texto}"""
+
+    try:
+        respuesta = requests.post(
+            "http://localhost:11434/api/generate",
+            json={
+                "model":  "llama3.2",
+                "prompt": prompt,
+                "stream": False
+            },
+            timeout=60
+        )
+        resultado = respuesta.json()
+        return resultado.get("response", "No se pudo generar el resumen.").strip()
+    except Exception as e:
+        return f"Error al conectar con Ollama: {str(e)}"
+
+@app.route("/analizar", methods=["POST"])
+def analizar():
+    datos = request.get_json()
+    texto = datos.get("texto", "").strip()
+
+    if not texto:
+        return jsonify({"error": "No se recibió texto"}), 400
+
+    # Python ejecuta las tres tareas y devuelve todo junto a PHP
+    estadisticas = analizar_texto(texto)
+    idioma       = detectar_idioma(texto)
+    resumen      = resumir_con_ollama(texto)
+
+    return jsonify({
+        "estadisticas": estadisticas,
+        "idioma":       idioma,
+        "resumen":      resumen
+    })
+
+if __name__ == "__main__":
+    print("✅ Servidor Stack PHP+Python listo en http://localhost:5000")
+    app.run(port=5000, debug=False)
