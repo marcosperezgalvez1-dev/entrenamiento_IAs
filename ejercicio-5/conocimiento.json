@@ -1,0 +1,34 @@
+[
+    {
+        "pregunta": "¿Cuál es el horario del instituto?",
+        "respuesta": "El instituto abre de lunes a viernes de 8:00 a 21:00 horas. Por las mañanas de 8:00 a 14:30 y por las tardes de 15:30 a 21:00."
+    },
+    {
+        "pregunta": "¿Qué ciclos formativos ofrece el instituto?",
+        "respuesta": "El instituto ofrece los ciclos de Desarrollo de Aplicaciones Web (DAW), Desarrollo de Aplicaciones Multiplataforma (DAM), Administración de Sistemas Informáticos en Red (ASIR) y Sistemas Microinformáticos y Redes (SMR)."
+    },
+    {
+        "pregunta": "¿Cómo puedo matricularme?",
+        "respuesta": "La matriculación se realiza en junio durante el periodo oficial de admisión de la Conselleria d'Educació. Debes acceder a la plataforma GVA y seguir los pasos indicados. Para más información puedes llamar a secretaría."
+    },
+    {
+        "pregunta": "¿Cuál es el teléfono de secretaría?",
+        "respuesta": "El teléfono de secretaría es el 963 000 000. El horario de atención al público es de lunes a viernes de 9:00 a 13:00."
+    },
+    {
+        "pregunta": "¿Dónde está ubicado el instituto?",
+        "respuesta": "El instituto está ubicado en la Calle Informática, número 1, Valencia. Puedes llegar en metro bajando en la parada Universitat Politècnica o en autobús con las líneas 40 y 71."
+    },
+    {
+        "pregunta": "¿Tiene el instituto bolsa de trabajo?",
+        "respuesta": "Sí, el instituto dispone de una bolsa de trabajo activa para exalumnos y alumnos de último curso. Puedes registrarte hablando con el departamento de orientación."
+    },
+    {
+        "pregunta": "¿Cuánto dura el ciclo de DAW?",
+        "respuesta": "El ciclo de Desarrollo de Aplicaciones Web (DAW) tiene una duración de 2000 horas repartidas en dos cursos académicos, incluyendo la Formación en Centros de Trabajo (FCT) de 400 horas."
+    },
+    {
+        "pregunta": "¿Hay plazas para adultos en horario nocturno?",
+        "respuesta": "Sí, el instituto ofrece el turno vespertino-nocturno especialmente orientado a personas trabajadoras. Las clases son de 15:30 a 21:00."
+    }
+]
