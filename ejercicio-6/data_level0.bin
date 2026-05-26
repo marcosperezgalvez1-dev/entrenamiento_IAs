@@ -1,0 +1,70 @@
+from flask import Flask, request, jsonify
+import chromadb
+import requests
+import json
+from sentence_transformers import SentenceTransformer
+
+app = Flask(__name__)
+
+# Cargamos el modelo y la base de datos al arrancar el servidor
+print("Iniciando servidor RAG...")
+modelo    = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+cliente   = chromadb.PersistentClient(path="./chroma_db")
+coleccion = cliente.get_collection("instituto")
+print("✅ Servidor listo en http://localhost:5000")
+
+@app.route("/preguntar", methods=["POST"])
+def preguntar():
+    datos    = request.get_json()
+    pregunta = datos.get("pregunta", "")
+
+    if not pregunta:
+        return jsonify({"error": "No se recibió ninguna pregunta"}), 400
+
+    # Convertimos la pregunta a vector
+    vector_pregunta = modelo.encode([pregunta]).tolist()
+
+    # Buscamos las 3 entradas más similares semánticamente en ChromaDB
+    resultados = coleccion.query(
+        query_embeddings = vector_pregunta,
+        n_results        = 3
+    )
+
+    # Construimos el contexto con los resultados
+    contexto = ""
+    entradas_usadas = []
+
+    for meta in resultados["metadatas"][0]:
+        contexto += f"P: {meta['pregunta']}\nR: {meta['respuesta']}\n\n"
+        entradas_usadas.append(meta['pregunta'])
+
+    # Construimos el prompt para Ollama
+    prompt = f"""Eres el asistente virtual de un instituto de formación profesional.
+Usa ÚNICAMENTE la siguiente información para responder:
+
+{contexto}
+Si la información no es suficiente, indícalo y sugiere contactar con secretaría.
+Responde siempre en español, de forma clara y amable.
+Pregunta: {pregunta}"""
+
+    # Llamamos a Ollama
+    respuesta_ollama = requests.post(
+        "http://localhost:11434/api/generate",
+        json={
+            "model":  "llama3.2",
+            "prompt": prompt,
+            "stream": False
+        }
+    )
+
+    resultado = respuesta_ollama.json()
+    respuesta_texto = resultado.get("response", "No se pudo obtener respuesta.")
+
+    return jsonify({
+        "respuesta":       respuesta_texto,
+        "contexto_usado":  contexto,
+        "entradas_usadas": entradas_usadas
+    })
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=False)
